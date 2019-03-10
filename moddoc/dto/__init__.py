@@ -10,11 +10,12 @@ class Error(Schema):
     message = fields.Str()
 
 
-from moddoc.dto.auth_schema import LoginSchema
+from moddoc.dto.auth_schema import LoginSchema, RegistrationSchema
 
 
 __all__ = [
     'Error',
     'LoginSchema',
+    'RegistrationSchema',
     'not_null_or_empty',
 ]
