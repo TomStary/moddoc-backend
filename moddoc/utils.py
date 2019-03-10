@@ -1,4 +1,4 @@
-from flask_sqlalchemy import Model, SQLAlchemy
+from flask_sqlalchemy import Model, SQLAlchemy, BaseQuery
 import sqlalchemy as sa
 from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects.postgresql import UUID
@@ -72,4 +72,10 @@ class SoftDeleteModel(object):
     deleted = sa.Column(sa.DateTime, nullable=True, default=None)
 
 
-# TODO: Query class with extension for softdelete filter
+class SoftDeleteQuery(BaseQuery):
+    def get(self, id, default=None):
+        object = self.get(id, default)
+        if object.deleted is None:
+            return object
+        else:
+            return default

@@ -31,7 +31,7 @@ def upgrade():
     )
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.add_column(sa.Column('active', sa.Boolean(), nullable=True))
-        batch_op.add_column(sa.Column('password', sa.String(length=128), nullable=False))
+        batch_op.add_column(sa.Column('password', sa.String(length=255), nullable=False))
         batch_op.alter_column('email',
                existing_type=sa.VARCHAR(length=128),
                nullable=False)

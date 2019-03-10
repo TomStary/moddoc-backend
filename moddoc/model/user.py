@@ -1,9 +1,11 @@
+from flask_login import UserMixin
 from moddoc import app
 from moddoc.utils import SoftDeleteModel
 import sqlalchemy as sa
+import uuid
 
 
-class User(app.db.Model, SoftDeleteModel):
+class User(app.db.Model, SoftDeleteModel, UserMixin):
     """
     User class
 
@@ -11,25 +13,15 @@ class User(app.db.Model, SoftDeleteModel):
     """
     email = sa.Column(sa.String(128), nullable=False, unique=True)
     username = sa.Column(sa.String(64), nullable=False, unique=True)
-    password = sa.Column(sa.String(128), nullable=False)
+    password = sa.Column(sa.String(255), nullable=False)
     active = sa.Column(sa.Boolean, default=True)
 
-    def __init__(self, email=None, username=None, password=None):
+    def __init__(self, email=None, username=None, password=None, user_id=None):
+        if user_id is None:
+            self.id = uuid.uuid4()
         self.email = email
         self.username = username
-        self.password = password
-
-
-class UserToken(app.db.Model, SoftDeleteModel):
-    """
-    User Token class
-
-    Stores all used token by user
-    """
-    token = sa.Column(sa.String(128), nullable=False, unique=True)
-
-    def __init__(self, token=None):
-        self.token = token
+        self.password = app.bcrypt.generate_password_hash(password).decode('utf-8')
 
 
 class Role(app.db.Model, SoftDeleteModel):
