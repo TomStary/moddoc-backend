@@ -1,14 +1,12 @@
 from flask import Flask, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_restful import Api
 
 
 class Moddoc(Flask):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.db = None
-        self.api = None
 
     @staticmethod
     def create_app():
@@ -22,20 +20,18 @@ class Moddoc(Flask):
 
         migrate = Migrate(app, app.db, render_as_batch=True) # noqa 841
 
-        app.api = Api(app)
-
         return app
 
-    def init_api_resources(self):
-        from moddoc.api import Login
-        self.api.add_resource(Login, '/login')
+    def init_api(self):
+        from moddoc.api import auth
+        self.register_blueprint(auth)
 
 
 app = Moddoc.create_app()
-app.init_api_resources()
+app.init_api()
 
 import moddoc.model  # noqa 402 401
 
 __all__ = [
-    'app'
+    'app',
 ]

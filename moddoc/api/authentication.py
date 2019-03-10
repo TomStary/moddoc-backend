@@ -1,12 +1,13 @@
-from flask_restful import Resource, fields, marshal_with
+from flask import Blueprint, request, jsonify
+from moddoc.utils import ApiException
 
 
-token = {
-    'token': fields.String,
-}
+auth = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-class Login(Resource):
-    @marshal_with(token)
-    def post(self):
-        return {'token': "yes"}
+@auth.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    if not data:
+        raise ApiException(422, "No data")
+    return jsonify({'token': "yes"})

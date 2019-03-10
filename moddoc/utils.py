@@ -6,6 +6,12 @@ from sqlalchemy.ext.declarative import declared_attr, has_inherited_table
 import uuid
 
 
+class ApiException(Exception):
+    def __init__(self, errorCode=400, message=None):
+        self.errorCode = errorCode
+        self.message = message
+
+
 # FIXME: add source
 class GUID(TypeDecorator):
     """Platform-independent GUID type.
