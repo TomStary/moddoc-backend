@@ -10,7 +10,8 @@ class Error(Schema):
     message = fields.Str()
 
 
-from moddoc.dto.auth_schema import LoginSchema, RegistrationSchema
+from moddoc.dto.auth_schema import LoginSchema, RegistrationSchema  # noqa 402
+# FIXME: override default error for missing data
 
 
 __all__ = [

@@ -9,5 +9,5 @@ class LoginSchema(Schema):
 
 class RegistrationSchema(Schema):
     username = fields.Str(required=True, validate=not_null_or_empty)
-    email = fields.Email()
+    email = fields.Email(required=True)
     password = fields.Str(required=True, validate=not_null_or_empty)

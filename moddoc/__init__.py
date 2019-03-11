@@ -15,6 +15,7 @@ class Moddoc(Flask):
     def create_app():
         app = Moddoc(__name__)
 
+        # FIXME: better config loader
         app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://effit_sys:rootroot@localhost/moddoc'
         app.config['SECRET_KEY'] = "I have no secret"
 
