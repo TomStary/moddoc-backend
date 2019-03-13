@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 from flask_login import current_user, login_user
 from sqlalchemy import or_
 from moddoc.model import User
@@ -38,7 +38,8 @@ def login():
 
 @auth.route('/registration', methods=['POST'])
 def registration():
-    data = request.get_json()  # TODO: make decorator with schema as param, returns valid data or raise exception
+    # TODO: make decorator with schema as param, returns valid data or raise exception  # noqa 501
+    data = request.get_json()
     if not data:
         raise ApiException(422, "No data.")
     form, errors = __registrationSchema.load(data)

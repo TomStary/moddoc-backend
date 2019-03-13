@@ -21,7 +21,8 @@ class User(app.db.Model, SoftDeleteModel, UserMixin):
             self.id = uuid.uuid4()
         self.email = email
         self.username = username
-        self.password = app.bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password = app.bcrypt.generate_password_hash(
+            password).decode('utf-8')
 
 
 class Role(app.db.Model, SoftDeleteModel):

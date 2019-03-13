@@ -1,8 +1,9 @@
-from flask_sqlalchemy import Model, SQLAlchemy, BaseQuery
+from datetime import datetime
+from flask_sqlalchemy import Model, BaseQuery
 import sqlalchemy as sa
 from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declared_attr, has_inherited_table
+from sqlalchemy.ext.declarative import declared_attr
 import uuid
 
 
@@ -50,7 +51,7 @@ class GUID(TypeDecorator):
 
 
 class IdModel(Model):
-    # FIXME add source: http://flask-sqlalchemy.pocoo.org/2.3/customizing/#model-class
+    # FIXME add source: http://flask-sqlalchemy.pocoo.org/2.3/customizing/#model-class  # noqa 501
     @declared_attr
     def id(cls):
         for base in cls.__mro__[1:-1]:
@@ -63,9 +64,6 @@ class IdModel(Model):
         return sa.Column(type, primary_key=True)
 
 
-from datetime import datetime
-
-
 class SoftDeleteModel(object):
     created = sa.Column(sa.DateTime, nullable=False, default=datetime.utcnow)
     updated = sa.Column(sa.DateTime, nullable=True, default=None)
@@ -73,9 +71,9 @@ class SoftDeleteModel(object):
 
 
 class SoftDeleteQuery(BaseQuery):
-    def get(self, id, default=None):
-        object = self.get(id, default)
-        if object.deleted is None:
+    def soft_get(self, id, default=None):
+        object = self.get(id)
+        if object and object.deleted is None:
             return object
         else:
             return default

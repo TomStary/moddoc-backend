@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint
+from flask import Flask
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -16,7 +16,7 @@ class Moddoc(Flask):
         app = Moddoc(__name__)
 
         # FIXME: better config loader
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://effit_sys:rootroot@localhost/moddoc'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://effit_sys:rootroot@localhost/moddoc'  # noqa 501
         app.config['SECRET_KEY'] = "I have no secret"
 
         # TODO: custom settings
@@ -24,7 +24,7 @@ class Moddoc(Flask):
         app.db = SQLAlchemy(app, model_class=IdModel,
                             query_class=SoftDeleteQuery)
 
-        migrate = Migrate(app, app.db, render_as_batch=True) # noqa 841
+        migrate = Migrate(app, app.db, render_as_batch=True)  # noqa 841
 
         app.bcrypt = Bcrypt(app)
 
