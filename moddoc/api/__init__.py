@@ -9,8 +9,8 @@ error_scheme = Error()
 
 @auth.errorhandler(ApiException)
 def __response_error_handler(error):
-    result = error_scheme.dump(error)
-    return jsonify({'error': result}), error.errorCode
+    result = {'error': error_scheme.dump(error).data}
+    return jsonify(result), error.errorCode
 
 
 __all__ = [

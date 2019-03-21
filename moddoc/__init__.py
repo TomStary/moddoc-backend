@@ -1,5 +1,6 @@
-from flask import Flask
+from flask import Flask, logging
 from flask_bcrypt import Bcrypt
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from moddoc.service import login_manager
@@ -14,6 +15,7 @@ class Moddoc(Flask):
     @staticmethod
     def create_app():
         app = Moddoc(__name__)
+        CORS(app)
 
         # FIXME: better config loader
         app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://effit_sys:rootroot@localhost/moddoc'  # noqa 501
