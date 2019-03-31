@@ -77,3 +77,6 @@ class SoftDeleteQuery(BaseQuery):
             return object
         else:
             return default
+
+    def soft_all(self):
+        return self.filter_by(deleted=None).all()
