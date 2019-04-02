@@ -37,3 +37,18 @@ class Role(app.db.Model, SoftDeleteModel):
 
     def __init__(self, name=None):
         self.name = name
+
+
+class UserToRole(app.db.Model, SoftDeleteModel):
+    """
+    User to Role connection
+
+    Stores connection between roles and users
+    """
+
+    user_id = sa.ForeignKey(User.id)
+    role_id = sa.ForeignKey(Role.id)
+
+    def __init__(self, user_id, role_id):
+        self.user_id = user_id
+        self.role_id = role_id

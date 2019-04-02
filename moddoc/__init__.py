@@ -3,6 +3,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager
 from moddoc.service import login_manager
 
 
@@ -26,6 +27,8 @@ class Moddoc(Flask):
         app.db = SQLAlchemy(app, model_class=IdModel,
                             query_class=SoftDeleteQuery)
 
+        JWTManager(app)
+
         migrate = Migrate(app, app.db, render_as_batch=True)  # noqa 841
 
         app.bcrypt = Bcrypt(app)
@@ -33,8 +36,9 @@ class Moddoc(Flask):
         return app
 
     def init_api(self):
-        from moddoc.api import auth
+        from moddoc.api import auth, user
         self.register_blueprint(auth)
+        self.register_blueprint(user)
 
     def init_user(self):
         from moddoc.model import User
@@ -43,7 +47,7 @@ class Moddoc(Flask):
 
 
 app = Moddoc.create_app()
-login_manager.init_app(app)
+# login_manager.init_app(app)
 app.init_api()
 
 import moddoc.model  # noqa 402 401s

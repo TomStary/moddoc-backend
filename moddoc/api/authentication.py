@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_login import current_user, login_user
+from flask_jwt_extended import create_access_token
 from sqlalchemy import or_
 from moddoc.model import User
 from moddoc.utils import ApiException
@@ -9,6 +9,7 @@ from moddoc.dto import LoginSchema, RegistrationSchema, UserSchema
 auth = Blueprint('auth', __name__, url_prefix='/auth')
 __loginSchema = LoginSchema()
 __registrationSchema = RegistrationSchema()
+__userSchema = UserSchema()
 
 
 # TODO: need some refactor
@@ -17,8 +18,6 @@ def login():
     data = request.get_json()
     if not data:
         raise ApiException(422, "No data.")
-    if current_user.is_authenticated:
-        return jsonify({'token': 'yes'})
     form, errors = __loginSchema.load(data)
     if errors:
         return jsonify({'error': errors}), 422
@@ -30,8 +29,9 @@ def login():
         raise ApiException(400, "Username or password mismatch.")
     from moddoc import app
     if app.bcrypt.check_password_hash(user.password, form['password']):
-        login_user(user)
-        return jsonify({"username": user.username})
+        user.token = create_access_token(identity=user.username)
+        data = __userSchema.dump(user).data
+        return jsonify(data)
     else:
         raise ApiException(400, "Username or password mismatch.")
 
@@ -59,5 +59,6 @@ def registration():
     from moddoc import app
     app.db.session.add(user)
     app.db.session.commit()
-    login_user(user)
-    return jsonify({"status": "logged"})
+    user.token = create_access_token(user.username)
+    data = __userSchema.dump(user).data
+    return jsonify(data)
