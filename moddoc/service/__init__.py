@@ -1,6 +1,6 @@
-from moddoc.service.auth_service import login_manager
+from moddoc.service.auth_service import add_claims
 
 
 __all__ = [
-    'login_manager',
+    'add_claims',
 ]

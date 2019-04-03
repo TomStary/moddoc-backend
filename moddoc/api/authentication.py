@@ -29,8 +29,8 @@ def login():
         raise ApiException(400, "Username or password mismatch.")
     from moddoc import app
     if app.bcrypt.check_password_hash(user.password, form['password']):
-        user.token = create_access_token(identity=user.username)
         data = __userSchema.dump(user).data
+        data['token'] = create_access_token(identity=data)
         return jsonify(data)
     else:
         raise ApiException(400, "Username or password mismatch.")
@@ -59,6 +59,6 @@ def registration():
     from moddoc import app
     app.db.session.add(user)
     app.db.session.commit()
-    user.token = create_access_token(user.username)
     data = __userSchema.dump(user).data
+    data['token'] = create_access_token(data)
     return jsonify(data)

@@ -1,6 +1,6 @@
 from flask_login import UserMixin
 from moddoc import app
-from moddoc.utils import SoftDeleteModel
+from moddoc.utils import SoftDeleteModel, GUID
 import sqlalchemy as sa
 import uuid
 
@@ -15,6 +15,7 @@ class User(app.db.Model, SoftDeleteModel, UserMixin):
     username = sa.Column(sa.String(64), nullable=False, unique=True)
     password = sa.Column(sa.String(255), nullable=False)
     active = sa.Column(sa.Boolean, default=True)
+    roles = sa.orm.relationship("UserToRole", back_populates="role")
 
     def __init__(self, email=None, username=None, password=None, user_id=None):
         if user_id is None:
@@ -34,6 +35,7 @@ class Role(app.db.Model, SoftDeleteModel):
     """
     name = sa.Column(sa.String(128), nullable=False, unique=True)
     default = sa.Column(sa.Boolean, nullable=False, default=False)
+    users = sa.orm.relationship("UserToRole", back_populates="user")
 
     def __init__(self, name=None):
         self.name = name
@@ -46,8 +48,10 @@ class UserToRole(app.db.Model, SoftDeleteModel):
     Stores connection between roles and users
     """
 
-    user_id = sa.ForeignKey(User.id)
-    role_id = sa.ForeignKey(Role.id)
+    user_id = sa.Column(GUID(), sa.ForeignKey(User.id), primary_key=True)
+    role_id = sa.Column(GUID(), sa.ForeignKey(Role.id), primary_key=True)
+    user = sa.orm.relationship("Role", back_populates="users")
+    role = sa.orm.relationship("User", back_populates="roles")
 
     def __init__(self, user_id, role_id):
         self.user_id = user_id

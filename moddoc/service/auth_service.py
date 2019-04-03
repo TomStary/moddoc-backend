@@ -1,10 +1,7 @@
-from flask_login import LoginManager
+from moddoc import app
 
 
-login_manager = LoginManager()
-
-
-@login_manager.user_loader
-def get_user(user_id):
-    from moddoc.model import User
-    return User.query.soft_get(user_id)
+@app.jwt.user_claims_loader
+def add_claims(user):
+    print(user)
+    return {'roles': user['roles']}
