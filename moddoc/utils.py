@@ -69,6 +69,9 @@ class SoftDeleteModel(object):
     updated = sa.Column(sa.DateTime, nullable=True, default=None)
     deleted = sa.Column(sa.DateTime, nullable=True, default=None)
 
+    def delete(self):
+        self.deleted = datetime.utcnow()
+
 
 class SoftDeleteQuery(BaseQuery):
     def soft_get(self, id, default=None):

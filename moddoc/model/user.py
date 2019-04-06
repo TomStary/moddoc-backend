@@ -1,7 +1,9 @@
 from flask_login import UserMixin
 from moddoc import app
-from moddoc.utils import SoftDeleteModel, GUID
+from moddoc.utils import SoftDeleteModel, GUID, ApiException
 import sqlalchemy as sa
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import backref
 import uuid
 
 
@@ -15,15 +17,48 @@ class User(app.db.Model, SoftDeleteModel, UserMixin):
     username = sa.Column(sa.String(64), nullable=False, unique=True)
     password = sa.Column(sa.String(255), nullable=False)
     active = sa.Column(sa.Boolean, default=True)
-    roles = sa.orm.relationship("UserToRole", back_populates="role")
+    roles = association_proxy('user_role', 'role')
 
-    def __init__(self, email=None, username=None, password=None, user_id=None):
+    def __init__(self,
+                 username=None,
+                 email=None,
+                 password=None,
+                 user_id=None,
+                 roles=[]):
         if user_id is None:
             self.id = uuid.uuid4()
         self.email = email
         self.username = username
         self.password = app.bcrypt.generate_password_hash(
             password).decode('utf-8')
+        for role in roles:
+            self.add_role(role)
+
+    def add_role(self, role):
+        if role is None:
+            raise ApiException(400, "Role has to be specified.")
+        role = Role.query.filter_by(name=role, deleted=None).one_or_none()
+        if role is None:
+            raise ApiException(400, "Role with this name does not exists.")
+        self.roles.append(role)
+
+    def update(self, userModel):
+        if self.username != userModel.username:
+            user = User.query.filter(User.username == userModel.username,
+                                     User.deleted is None)\
+                             .one_or_none()
+            if user is None:
+                self.username = userModel.username
+            else:
+                raise ApiException(400, "Username is already taken.")
+        if self.email != userModel.email:
+            user = User.query.filter(User.email == userModel.email,
+                                     User.deleted is None)\
+                             .one_or_none()
+            if user is None:
+                self.email = userModel.email
+            else:
+                raise ApiException(400, "Email is already taken.")
 
 
 class Role(app.db.Model, SoftDeleteModel):
@@ -34,11 +69,15 @@ class Role(app.db.Model, SoftDeleteModel):
     altered
     """
     name = sa.Column(sa.String(128), nullable=False, unique=True)
+    flag = sa.Column(sa.Integer, nullable=False, default=0)
     default = sa.Column(sa.Boolean, nullable=False, default=False)
-    users = sa.orm.relationship("UserToRole", back_populates="user")
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, flag=0, default=False, role_id=None):
+        if role_id is None:
+            self.id = uuid.uuid4()
         self.name = name
+        self.flag = flag
+        self.default = default
 
 
 class UserToRole(app.db.Model, SoftDeleteModel):
@@ -50,9 +89,10 @@ class UserToRole(app.db.Model, SoftDeleteModel):
 
     user_id = sa.Column(GUID(), sa.ForeignKey(User.id), primary_key=True)
     role_id = sa.Column(GUID(), sa.ForeignKey(Role.id), primary_key=True)
-    user = sa.orm.relationship("Role", back_populates="users")
-    role = sa.orm.relationship("User", back_populates="roles")
+    user = sa.orm.relationship(User, backref=backref("user_role"))
+    role = sa.orm.relationship(Role)
 
-    def __init__(self, user_id, role_id):
-        self.user_id = user_id
-        self.role_id = role_id
+    def __init__(self, user=None, role=None):
+        self.id = uuid.uuid4()
+        self.role = role
+        self.user = user
