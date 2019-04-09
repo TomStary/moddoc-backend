@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
     create_access_token, create_refresh_token, jwt_refresh_token_required,
-    get_jwt_identity
+    get_jwt_identity, jwt_required
 )
 from sqlalchemy import or_
 
@@ -95,6 +95,7 @@ def refresh():
 
 
 @auth.route('/logout', methods=['GET'])
+@jwt_required
 def logout():
     user_identity = get_jwt_identity()
     all_tokens = get_user_tokens(user_identity)
