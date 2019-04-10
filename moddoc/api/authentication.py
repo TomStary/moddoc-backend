@@ -60,29 +60,20 @@ def registration():
     if errors:
         return jsonify(errors), 422
     user = User.query\
-        .filter(User.username == form['username'],
-                User.deleted is None)\
+        .filter(User.username == form['username'])\
         .one_or_none()
     if user is not None:
         raise ApiException(400, "Username taken.")
     user = User.query\
-        .filter(User.email == form['email'],
-                User.deleted is None)\
+        .filter(User.email == form['email'])\
         .one_or_none()
     if user is not None:
         raise ApiException(400, "Email taken.")
-    user = User(form['email'], form['username'], form['password'])
+    user = User(form['username'], form['email'], form['password'])
     from moddoc import app
     app.db.session.add(user)
     app.db.session.commit()
-    data = __userSchema.dump(user).data
-    data['access_token'] = create_access_token(identity=data)
-    data['refresh_token'] = create_refresh_token(identity=data),
-    add_token_to_database(data['access_token'],
-                          app.config['JWT_IDENTITY_CLAIM'])
-    add_token_to_database(data['refresh_token'],
-                          app.config['JWT_IDENTITY_CLAIM'])
-    return jsonify(data)
+    return jsonify()
 
 
 @auth.route('/refresh', methods=['POST'])
