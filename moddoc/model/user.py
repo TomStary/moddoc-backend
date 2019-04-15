@@ -1,4 +1,3 @@
-from flask_login import UserMixin
 from moddoc import app
 from moddoc.utils import SoftDeleteModel, GUID, ApiException
 import sqlalchemy as sa
@@ -7,7 +6,7 @@ from sqlalchemy.orm import backref
 import uuid
 
 
-class User(app.db.Model, SoftDeleteModel, UserMixin):
+class User(app.db.Model, SoftDeleteModel):
     """
     User class
 
