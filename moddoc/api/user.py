@@ -59,9 +59,10 @@ def update_your_profile():
     userData, errors = __userSchema.load(data)
     if errors:
         return jsonify({'error': errors}), 422
-    user = User.query.soft_get(userData.id)
+    user = User.query.soft_get(userData['id'])
     user.update(userData)
     result = __userSchema.dump(user).data
+    app.db.session.commit()
     return jsonify(result)
 
 

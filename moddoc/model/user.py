@@ -42,20 +42,18 @@ class User(app.db.Model, SoftDeleteModel):
         self.roles.append(role)
 
     def update(self, userModel):
-        if self.username != userModel.username:
-            user = User.query.filter(User.username == userModel.username,
-                                     User.deleted is None)\
+        if self.username != userModel['username']:
+            user = User.query.filter(User.username == userModel['username'])\
                              .one_or_none()
             if user is None:
-                self.username = userModel.username
+                self.username = userModel['username']
             else:
                 raise ApiException(400, "Username is already taken.")
-        if self.email != userModel.email:
-            user = User.query.filter(User.email == userModel.email,
-                                     User.deleted is None)\
+        if self.email != userModel['email']:
+            user = User.query.filter(User.email == userModel['email'])\
                              .one_or_none()
             if user is None:
-                self.email = userModel.email
+                self.email = userModel['email']
             else:
                 raise ApiException(400, "Email is already taken.")
 
