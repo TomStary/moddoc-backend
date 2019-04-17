@@ -1,6 +1,7 @@
 from flask import jsonify
 from moddoc.api.authentication import auth
 from moddoc.api.user import user
+from moddoc.api.repository import repository
 from moddoc.dto import Error
 from moddoc.utils import ApiException
 
@@ -10,6 +11,7 @@ error_scheme = Error()
 
 @auth.errorhandler(ApiException)
 @user.errorhandler(ApiException)
+@repository.errorhandler(ApiException)
 def __response_error_handler(error):
     result = {'error': error_scheme.dump(error).data}
     return jsonify(result), error.errorCode
@@ -17,5 +19,6 @@ def __response_error_handler(error):
 
 __all__ = [
     'auth',
-    'user'
+    'user',
+    'repository',
 ]
