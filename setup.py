@@ -8,5 +8,8 @@ setup(
         'flask',
         'flask-sqlalchemy',
         'flask-migrate',
+        'flask-cors',
+        'flask-bcrypt',
+        'flask_jwt_extended',
     ],
 )
