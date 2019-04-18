@@ -15,11 +15,12 @@ __repositoryScheme = RepositorySchema()
 def get_all():
     user = get_jwt_identity()
     result = Repository.query.get_by_owner(user)
-    data = __repositoryScheme.dump(result).data
+    data = __repositoryScheme.dump(result, many=True).data
     return jsonify(data)
 
 
 @repository.route('/<repository_id>', methods=['GET'])
+@jwt_required
 def get_repository(repository_id):
     result = Repository.query.get_by_id(repository_id)
     data = __repositoryScheme.dump(result).data
@@ -27,6 +28,7 @@ def get_repository(repository_id):
 
 
 @repository.route('', methods=['POST'])
+@jwt_required
 def create_or_update_repository():
     user = get_jwt_identity()
     data = request.get_json()
@@ -35,11 +37,13 @@ def create_or_update_repository():
     data, errors = __repositoryScheme.load(data)
     if errors:
         return jsonify({'error': errors}), 422
-    if data['id'] is None:
-        repository = Repository(None, data['name'], user['id'])
+    if 'id' not in data or data['id'] is None:
+        data['owner_id'] = user['id']
+        repository = Repository.create(data)
         app.db.session.add(repository)
     else:
         repository = Repository.query.get_by_id(data['id'])
         repository.update(data)
     app.db.session.commit()
-    return jsonify()
+    data = __repositoryScheme.dump(repository).data
+    return jsonify(data)

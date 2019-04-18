@@ -2,7 +2,7 @@ import sqlalchemy as sa
 import uuid
 
 from moddoc import app
-from moddoc.utils import GUID, SoftDeleteModel, SoftDeleteQuery
+from moddoc.utils import GUID, SoftDeleteModel, SoftDeleteQuery, ApiException
 
 
 class RepositoryQueryClass(SoftDeleteQuery):
@@ -26,6 +26,26 @@ class Repository(app.db.Model, SoftDeleteModel):
             self.id = repository_id
         self.name = name
         self.owner_id = owner_id
+
+    @staticmethod
+    def create(repository_model):
+        repository = Repository.query.filter(
+            Repository.name == repository_model['name']).one_or_none()
+        if repository is None:
+            return Repository(name=repository_model['name'],
+                              owner_id=repository_model['owner_id'])
+        else:
+            raise ApiException(400,
+                               'This name of repository is already taken.')
+
+    def update(self, repository_model):
+        reposiotory = Repository.query.filter(
+            Repository.name == repository_model['name']).one_or_none()
+        if reposiotory is None:
+            self.name = repository_model['name']
+        else:
+            raise ApiException(400,
+                               'This name of repository is already taken.')
 
 
 class Module(app.db.Model, SoftDeleteModel):
