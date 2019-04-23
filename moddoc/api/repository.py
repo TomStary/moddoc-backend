@@ -7,7 +7,7 @@ from moddoc.model import Repository
 from moddoc.utils import ApiException
 
 repository = Blueprint('repository', __name__, url_prefix='/repository')
-__repositoryScheme = RepositorySchema()
+__repositorySchema = RepositorySchema()
 
 
 @repository.route('', methods=['GET'])
@@ -15,7 +15,7 @@ __repositoryScheme = RepositorySchema()
 def get_all():
     user = get_jwt_identity()
     result = Repository.query.get_by_owner(user)
-    data = __repositoryScheme.dump(result, many=True).data
+    data = __repositorySchema.dump(result, many=True).data
     return jsonify(data)
 
 
@@ -23,7 +23,7 @@ def get_all():
 @jwt_required
 def get_repository(repository_id):
     result = Repository.query.get_by_id(repository_id)
-    data = __repositoryScheme.dump(result).data
+    data = __repositorySchema.dump(result).data
     return jsonify(data)
 
 
@@ -34,7 +34,7 @@ def create_or_update_repository():
     data = request.get_json()
     if data is None:
         raise ApiException(422, "No data.")
-    data, errors = __repositoryScheme.load(data)
+    data, errors = __repositorySchema.load(data)
     if errors:
         return jsonify({'error': errors}), 422
     if 'id' not in data or data['id'] is None:
@@ -45,5 +45,5 @@ def create_or_update_repository():
         repository = Repository.query.get_by_id(data['id'])
         repository.update(data)
     app.db.session.commit()
-    data = __repositoryScheme.dump(repository).data
+    data = __repositorySchema.dump(repository).data
     return jsonify(data)

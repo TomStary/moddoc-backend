@@ -16,16 +16,15 @@ class Moddoc(Flask):
 
     @staticmethod
     def create_app():
-        app = Moddoc(__name__)
+        app = Moddoc(__name__, instance_relative_config=True)
         CORS(app)
 
-        # FIXME: better config loader
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://effit_sys:rootroot@localhost/moddoc'  # noqa 501
-        app.config['SECRET_KEY'] = "I have no secret"
-        app.config['JWT_BLACKLIST_ENABLED'] = True
-        app.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access', 'refresh']
+        # Load the default configuration
+        app.config.from_object('config.default')
 
-        # TODO: custom settings
+        # Load the configuration from the instance folder
+        app.config.from_pyfile('config.py')
+
         from moddoc.utils import IdModel, SoftDeleteQuery
         app.db = SQLAlchemy(app, model_class=IdModel,
                             query_class=SoftDeleteQuery)
