@@ -82,7 +82,7 @@ def refresh():
     current_user = get_jwt_identity()
     access_token = create_access_token(identity=current_user)
     add_token_to_database(access_token, app.config['JWT_IDENTITY_CLAIM'])
-    return jsonify({'access_token': access_token}), 201
+    return jsonify({'access_token': access_token}), 200
 
 
 @auth.route('/logout', methods=['GET'])
