@@ -9,11 +9,10 @@ module = Blueprint('module', __name__, url_prefix='/module')
 __moduleSchema = ModuleSchema()
 
 
-@module.route('', methods=['GET'])
+@module.route('/all/<repository_id>', methods=['GET'])
 @jwt_required
-def get_all():
-    user = get_jwt_identity()
-    result = Module.query.get_by_user(user)
+def get_all(repository_id):
+    result = Module.query.get_by_repository(repository_id)
     data = __moduleSchema.dump(result, many=True).data
     return jsonify(data)
 

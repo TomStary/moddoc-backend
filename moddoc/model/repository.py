@@ -54,6 +54,10 @@ class ModuleQuery(SoftDeleteQuery):
         return self.filter(Module.repository.owner_id == user['id'],
                            Module.deleted is None).all()
 
+    def get_by_repository(self, repository_id):
+        return self.filter(Module.repository_id == repository_id,
+                           Module.deleted is None).all()
+
     def get_by_id(self, module_id, user):
         return self.filter(Module.repository.owner_id == user['id'],
                            Module.deleted is None,
