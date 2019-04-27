@@ -14,5 +14,5 @@ class ModuleSchema(Schema):
     id = fields.UUID()
     name = fields.Str(required=True, validate=not_null_or_empty)
     body = fields.Str(required=True)
-    repository_id = fields.UUID(load_only=True)
+    repository_id = fields.UUID(required=True, load_only=True)
     repository = fields.Nested(RepositorySchema, dump_only=True)

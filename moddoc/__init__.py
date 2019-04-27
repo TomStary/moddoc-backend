@@ -38,10 +38,11 @@ class Moddoc(Flask):
         return app
 
     def init_api(self):
-        from moddoc.api import auth, user, repository, module
+        from moddoc.api import auth, user, repository, module, document
         self.register_blueprint(auth)
         self.register_blueprint(user)
         self.register_blueprint(module)
+        self.register_blueprint(document)
         self.register_blueprint(repository)
 
     def seeds(self):

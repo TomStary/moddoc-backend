@@ -1,6 +1,8 @@
 from moddoc.model.jwt_blacklist import TokenBlacklist
-from moddoc.model.user import User, Role
+from moddoc.model.document import Document, LinkedRepositories, Revision
 from moddoc.model.repository import Repository, Module, ModuleHistory
+from moddoc.model.user import User, Role
+
 
 __all__ = [
     'User',
@@ -8,5 +10,8 @@ __all__ = [
     'TokenBlacklist',
     'Repository',
     'Module',
-    'ModuleHistory'
+    'ModuleHistory',
+    'Document',
+    'LinkedRepositories',
+    'Revision',
 ]

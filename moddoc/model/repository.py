@@ -2,7 +2,6 @@ import sqlalchemy as sa
 import uuid
 
 from moddoc import app
-from moddoc.model import User
 from moddoc.utils import GUID, SoftDeleteModel, SoftDeleteQuery, ApiException
 
 
@@ -55,13 +54,14 @@ class ModuleQuery(SoftDeleteQuery):
                            Module.deleted is None).all()
 
     def get_by_repository(self, repository_id):
-        return self.filter(Module.repository_id == repository_id,
-                           Module.deleted is None).all()
+        return self.filter_by(repository_id=repository_id,
+                              deleted=None).all()
 
     def get_by_id(self, module_id, user):
-        return self.filter(Module.repository.owner_id == user['id'],
-                           Module.deleted is None,
-                           Module.id == module_id).one_or_none()
+        return self.filter_by(deleted=None,
+                              id=module_id)\
+                   .join(Module.repository)\
+                   .filter_by(owner_id=user['id']).one_or_none()
 
 
 class Module(app.db.Model, SoftDeleteModel):
@@ -84,7 +84,7 @@ class Module(app.db.Model, SoftDeleteModel):
     @staticmethod
     def create_or_update(module_data):
         module = None
-        if module_data['id'] is None:
+        if 'id' not in module_data or module_data['id'] is None:
             module = Module(name=module_data['name'], body=module_data['body'],
                             repository_id=module_data['repository_id'])
             app.db.session.add(module)
