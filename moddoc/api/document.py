@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from moddoc import app
@@ -67,3 +67,13 @@ def create_link():
     app.db.session.commit()
     result = __documentSchema.dump(document).data
     return jsonify(result)
+
+
+@document.route('/build/<document_id>', methods=['GET'])
+@jwt_required
+def build_document(document_id):
+    document = Document.query.get_by_id(document_id)
+    if document is None:
+        raise ApiException(400, 'Document with this id does not exists.')
+    generated = document.build()
+    return send_file(generated, mimetype='application/pdf')

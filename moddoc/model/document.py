@@ -73,6 +73,13 @@ class Document(app.db.Model, SoftDeleteModel):
             raise ApiException(400,
                                'Document with this name already exists.')
 
+    def build(self):
+        for repository in self.repositories:
+            for module in repository.modules:
+                app.create_file(module.id, module.body)
+        app.create_file(self.name.replace(' ', '_'), self.body)
+        return app.generate_file(self.name.replace(' ', '_'))
+
 
 class LinkedRepositories(app.db.Model, SoftDeleteModel):
     repository_id = sa.Column(GUID(), sa.ForeignKey('repository.id'),

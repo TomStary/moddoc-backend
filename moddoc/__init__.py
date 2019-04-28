@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 import datetime
+import os
 
 
 class Moddoc(Flask):
@@ -50,9 +51,27 @@ class Moddoc(Flask):
         seed_roles()
         seed_users()
 
+    def prepare_build(self):
+        if not os.path.isdir('./build'):
+            os.mkdir('./build')
+
+    def create_file(self, filename, content):
+        path_to_file = './build/%s.rst' % filename
+        file = open(path_to_file, 'w')
+        file.write(content)
+        file.close()
+
+    def generate_file(self, filename):
+        import pypandoc
+        path_to_file = './build/%s.rst' % filename
+        outputfile = os.getcwd() + '/build/%s.pdf' % filename
+        pypandoc.convert_file(path_to_file, 'pdf', outputfile=outputfile)
+        return outputfile
+
 
 app = Moddoc.create_app()
 app.init_api()
+app.prepare_build()
 
 
 @app.before_first_request
