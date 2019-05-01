@@ -1,9 +1,10 @@
 from moddoc import app
-from moddoc.utils import SoftDeleteModel, GUID, ApiException
 import sqlalchemy as sa
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import backref
 import uuid
+
+from moddoc.utils import SoftDeleteModel, GUID, ApiException, SoftDeleteQuery
 
 
 class User(app.db.Model, SoftDeleteModel):
@@ -58,6 +59,20 @@ class User(app.db.Model, SoftDeleteModel):
                 raise ApiException(400, "Email is already taken.")
 
 
+class RoleQueryClass(SoftDeleteQuery):
+    def get_all():
+        return self.filter_by(deleted=None).all()
+
+    def get_by_id(id):
+        return self.filter_by(id=id).one_or_none()
+
+    def get_by_name(name):
+        return self.filter_by(
+            name=role_model['name'],
+            deleted=None
+        ).one_or_none()
+
+
 class Role(app.db.Model, SoftDeleteModel):
     """
     Role class
@@ -65,6 +80,7 @@ class Role(app.db.Model, SoftDeleteModel):
     Stores name of the role and also if it is default, default roles cannot be
     altered
     """
+    query_class = RoleQueryClass
     name = sa.Column(sa.String(128), nullable=False, unique=True)
     flag = sa.Column(sa.Integer, nullable=False, default=0)
     default = sa.Column(sa.Boolean, nullable=False, default=False)
@@ -75,6 +91,27 @@ class Role(app.db.Model, SoftDeleteModel):
         self.name = name
         self.flag = flag
         self.default = default
+
+    @staticmethod
+    def create(role_model):
+        check_name = Role.query.get_by_name(role_model['name'])
+        if check_name is None:
+            return Role(name=role_model['name'])
+        else:
+            raise ApiException(400, 'This name is already in use.')
+
+    @staticmethod
+    def update(role_model):
+        role = Role.query.get_by_id(role_model['id'])
+        if role is None:
+            raise ApiException(400, 'Role with this ID does not exists')
+        check_name = Role.query.get_by_name(role_model['name'])
+        if check_name is None or check_name.id = role.id:
+            role.name = role_model['name']
+            return role
+        else:
+            raise ApiException(400,
+                               'This name is already in use.')
 
 
 class UserToRole(app.db.Model, SoftDeleteModel):

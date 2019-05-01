@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+from moddoc import app
 from moddoc.dto import ModuleSchema
 from moddoc.model import Module
 from moddoc.utils import ApiException
@@ -21,8 +22,7 @@ def get_all(repository_id):
 @module.route('/<module_id>', methods=['GET'])
 @jwt_required
 def get_module(module_id):
-    user = get_jwt_identity()
-    result = Module.query.get_by_id(module_id, user)
+    result = Module.query.get_by_id(module_id)
     data = __moduleSchema.dump(result).data
     return jsonify(data)
 
@@ -36,6 +36,13 @@ def create_or_update():
     data, errors = __moduleSchema.load(data)
     if errors:
         return jsonify({'error': errors}), 422
-    module = Module.create_or_update(data)
+    if 'id' not in data or data['id'] is None:
+        module, history = Module.create(data)
+        app.db.session.add(module)
+        app.db.session.add(history)
+    else:
+        module, history = Module.update(data)
+        app.db.session.add(history)
+    app.db.session.commit()
     data = __moduleSchema.dump(module).data
     return jsonify(data)

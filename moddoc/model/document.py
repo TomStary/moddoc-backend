@@ -46,11 +46,11 @@ class Document(app.db.Model, SoftDeleteModel):
 
     @staticmethod
     def create(document_model):
-        checkName = Document.query.filter_by(
+        check_name = Document.query.filter_by(
             name=document_model['name'],
             deleted=None
         ).one_or_none()
-        if checkName is None:
+        if check_name is None:
             document = Document(document_model)
             revision = Revision.create_revision(document)
             return document, revision
@@ -63,8 +63,8 @@ class Document(app.db.Model, SoftDeleteModel):
         document = Document.query.get_by_id(document_model['id'])
         if document is None:
             raise ApiException(400, "No document with this ID exists.")
-        checkName = Document.query.get_by_name(document_model['name'])
-        if checkName is None or checkName.id == document.id:
+        check_name = Document.query.get_by_name(document_model['name'])
+        if check_name is None or check_name.id == document.id:
             document.name = document_model['name']
             document.body = document_model['body']
             revision = Revision.create_revision(document)

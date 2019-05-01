@@ -1,5 +1,6 @@
 import sqlalchemy as sa
 import uuid
+from datetime import datetime
 
 from moddoc import app
 from moddoc.utils import GUID, SoftDeleteModel, SoftDeleteQuery, ApiException
@@ -57,11 +58,16 @@ class ModuleQuery(SoftDeleteQuery):
         return self.filter_by(repository_id=repository_id,
                               deleted=None).all()
 
-    def get_by_id(self, module_id, user):
+    def get_by_id(self, module_id):
         return self.filter_by(deleted=None,
                               id=module_id)\
-                   .join(Module.repository)\
-                   .filter_by(owner_id=user['id']).one_or_none()
+                   .one_or_none()
+
+    def get_by_name(self, name, repository_id):
+        return self.filter_by(deleted=None,
+                              name=name,
+                              repository_id=repository_id)\
+                   .one_or_none()
 
 
 class Module(app.db.Model, SoftDeleteModel):
@@ -82,32 +88,59 @@ class Module(app.db.Model, SoftDeleteModel):
         self.repository_id = repository_id
 
     @staticmethod
-    def create_or_update(module_data):
-        module = None
-        if 'id' not in module_data or module_data['id'] is None:
+    def create(module_data):
+        check_name = Module.query.get_by_name(module_data['name'],
+                                              module_data['repository_id'])
+        if check_name is None:
             module = Module(name=module_data['name'], body=module_data['body'],
                             repository_id=module_data['repository_id'])
-            app.db.session.add(module)
+            history = ModuleHistory.create_history(module)
+            return module, history
         else:
-            module = Module.query.get_by_id(module_data['id'])
-            same_name = Module.query.filter(Module.name == module_data['name'],
-                                            Module.id != module.id,
-                                            Module.repository_id == module.repository_id)\
-                                    .any()  # noqa 501
-            if same_name:
-                raise ApiException(400, 'Same name is already present in repository.')  # noqa 501
+            raise ApiException(400,
+                               'Module with this name is already present in this repository')  # noqa 501
+
+    @staticmethod
+    def update(module_data):
+        module = Module.query.get_by_id(module_data['id'])
+        if module is None:
+            raise ApiException(400, 'Module with id does not exists.')
+        check_name = Module.query.get_by_name(module_data['name'],
+                                              module.repository_id)
+        if check_name is None or check_name.id == module.id:
             module.name = module_data['name']
             module.body = module_data['body']
-        app.db.session.commit()
-        return module
+            history = ModuleHistory.create_history(module)
+            return module, history
+        else:
+            raise ApiException(400,
+                               'Module with this name is already present in this repository')  # noqa 501
 
 
 class ModuleHistory(app.db.Model, SoftDeleteModel):
     body = sa.Column(sa.String(), nullable=False)
+    name = sa.Column(sa.String())
+    history_data = sa.Column(sa.DateTime, default=datetime.utcnow)
+    module_id = sa.Column(GUID(), sa.ForeignKey('module.id'))
+    module = sa.orm.relationship('Module', backref='history')
 
-    def __init__(self, history_id=None, body=None):
+    def __init__(self,
+                 history_id=None,
+                 body=None,
+                 name=None,
+                 module_id=None):
         if history_id is None:
             self.id = uuid.uuid4()
         else:
             self.id = history_id
         self.body = body
+        self.name = name
+        self.module_id = module_id
+
+    @staticmethod
+    def create_history(module):
+        history = ModuleHistory(None,
+                                module.body,
+                                module.name,
+                                module.id)
+        return history

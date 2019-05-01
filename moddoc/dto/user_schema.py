@@ -1,9 +1,12 @@
-from marshmallow import Schema, fields, pre_dump
+from marshmallow import Schema, fields
+
+from moddoc.dto import not_null_or_empty
 
 
 class RoleSchema(Schema):
-    name = fields.Str()
-    flag = fields.Int()
+    id = fields.UUID()
+    name = fields.Str(required=True, validate=not_null_or_empty)
+    flag = fields.Int(dump_only=True)
 
 
 class UserSchema(Schema):
