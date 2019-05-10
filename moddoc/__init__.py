@@ -16,7 +16,7 @@ class Moddoc(Flask):
         self.jwt = None
 
     @staticmethod
-    def create_app():
+    def create_app(environment='prod'):
         app = Moddoc(__name__, instance_relative_config=True)
         CORS(app)
 
@@ -25,10 +25,13 @@ class Moddoc(Flask):
 
         # Load the configuration from the instance folder
         app.config.from_pyfile('config.py')
+        app.config.from_pyfile('%s.py' % environment, True)
 
-        from moddoc.utils import IdModel, SoftDeleteQuery
+        from moddoc.utils import IdModel, SoftDeleteQuery, naming_convention
+        from sqlalchemy import MetaData
         app.db = SQLAlchemy(app, model_class=IdModel,
-                            query_class=SoftDeleteQuery)
+                            query_class=SoftDeleteQuery,
+                            metadata=MetaData(naming_convention=naming_convention))  # noqa 501
 
         app.jwt = JWTManager(app)
 
@@ -39,12 +42,13 @@ class Moddoc(Flask):
         return app
 
     def init_api(self):
-        from moddoc.api import auth, user, repository, module, document
+        from moddoc.api import auth, user, repository, role, module, document
         self.register_blueprint(auth)
         self.register_blueprint(user)
         self.register_blueprint(module)
         self.register_blueprint(document)
         self.register_blueprint(repository)
+        self.register_blueprint(role)
 
     def seeds(self):
         from moddoc.seed import seed_roles, seed_users
@@ -83,4 +87,5 @@ import moddoc.service.auth_service  # noqa 401 402
 
 __all__ = [
     'app',
+    'Moddoc'
 ]

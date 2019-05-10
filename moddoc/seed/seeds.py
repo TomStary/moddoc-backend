@@ -17,4 +17,9 @@ def seed_roles():
 
 
 def seed_users():
-    pass
+    admin = User.query.filter_by(email='admin').one_or_none()
+    if admin is None:
+        admin = User('admin', 'admin', password='admin')
+        admin.add_role('superadmin')
+        app.db.session.add(admin)
+        app.db.session.commit()

@@ -1,6 +1,8 @@
+from sqlalchemy.orm import backref
+from sqlalchemy.ext.associationproxy import association_proxy
+from datetime import datetime
 import sqlalchemy as sa
 import uuid
-from datetime import datetime
 
 from moddoc import app
 from moddoc.utils import GUID, SoftDeleteModel, SoftDeleteQuery, ApiException
@@ -19,6 +21,7 @@ class Repository(app.db.Model, SoftDeleteModel):
     name = sa.Column(sa.String(64), unique=True, nullable=False)
     owner_id = sa.Column(GUID, sa.ForeignKey('user.id'))
     owner = sa.orm.relationship('User', backref='repositories')
+    permissions = association_proxy('repository_permission', 'user')
 
     def __init__(self, repository_id=None, name=None, owner_id=None):
         if repository_id is None:
@@ -47,6 +50,28 @@ class Repository(app.db.Model, SoftDeleteModel):
         else:
             raise ApiException(400,
                                'This name of repository is already taken.')
+
+
+class RepositoryPermission(app.db.Model, SoftDeleteModel):
+    repository_id = sa.Column(GUID(), sa.ForeignKey('repository.id'),
+                              primary_key=True)
+    user_id = sa.Column(GUID(), sa.ForeignKey('user.id'), primary_key=True)
+    read = sa.Column(sa.Boolean, nullable=False, default=False)
+    write = sa.Column(sa.Boolean, nullable=False, default=False)
+
+    repository = sa.orm.relationship(Repository,
+                                     backref=backref('repository_permission'))
+    user = sa.orm.relationship('User')
+
+    def __init__(self,
+                 repository=None,
+                 user=None,
+                 read=None,
+                 write=None):
+        self.repository = repository
+        self.user = user
+        self.read = read
+        self.write = write
 
 
 class ModuleQuery(SoftDeleteQuery):

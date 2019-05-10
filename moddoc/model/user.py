@@ -23,16 +23,13 @@ class User(app.db.Model, SoftDeleteModel):
                  username=None,
                  email=None,
                  password=None,
-                 user_id=None,
-                 roles=[]):
+                 user_id=None):
         if user_id is None:
             self.id = uuid.uuid4()
         self.email = email
         self.username = username
         self.password = app.bcrypt.generate_password_hash(
             password).decode('utf-8')
-        for role in roles:
-            self.add_role(role)
 
     def add_role(self, role):
         if role is None:
@@ -60,15 +57,15 @@ class User(app.db.Model, SoftDeleteModel):
 
 
 class RoleQueryClass(SoftDeleteQuery):
-    def get_all():
+    def get_all(self):
         return self.filter_by(deleted=None).all()
 
-    def get_by_id(id):
+    def get_by_id(self, id):
         return self.filter_by(id=id).one_or_none()
 
-    def get_by_name(name):
+    def get_by_name(self, name):
         return self.filter_by(
-            name=role_model['name'],
+            name=name,
             deleted=None
         ).one_or_none()
 
@@ -106,7 +103,7 @@ class Role(app.db.Model, SoftDeleteModel):
         if role is None:
             raise ApiException(400, 'Role with this ID does not exists')
         check_name = Role.query.get_by_name(role_model['name'])
-        if check_name is None or check_name.id = role.id:
+        if check_name is None or check_name.id == role.id:
             role.name = role_model['name']
             return role
         else:
@@ -126,7 +123,7 @@ class UserToRole(app.db.Model, SoftDeleteModel):
     user = sa.orm.relationship(User, backref=backref("user_role"))
     role = sa.orm.relationship(Role)
 
-    def __init__(self, user=None, role=None):
+    def __init__(self, role=None, user=None):
         self.id = uuid.uuid4()
         self.role = role
         self.user = user
