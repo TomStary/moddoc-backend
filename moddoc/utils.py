@@ -21,7 +21,6 @@ class ApiException(Exception):
         self.message = message
 
 
-# FIXME: add source
 class GUID(TypeDecorator):
     """Platform-independent GUID type.
 
@@ -58,8 +57,8 @@ class GUID(TypeDecorator):
             return value
 
 
+#Source: http://flask-sqlalchemy.pocoo.org/2.3/customizing/#model-class  # noqa 501
 class IdModel(Model):
-    # FIXME add source: http://flask-sqlalchemy.pocoo.org/2.3/customizing/#model-class  # noqa 501
     @declared_attr
     def id(cls):
         for base in cls.__mro__[1:-1]:

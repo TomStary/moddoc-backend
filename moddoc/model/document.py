@@ -77,15 +77,15 @@ class Document(app.db.Model, SoftDeleteModel):
         for repository in self.repositories:
             for module in repository.modules:
                 app.create_file(module.id, module.body)
+                for version in module.history:
+                    app.create_file(version.id, version.body)
         app.create_file(self.name.replace(' ', '_'), self.body)
         return app.generate_file(self.name.replace(' ', '_'))
 
 
 class LinkedRepositories(app.db.Model, SoftDeleteModel):
-    repository_id = sa.Column(GUID(), sa.ForeignKey('repository.id'),
-                              primary_key=True)
-    document_id = sa.Column(GUID(), sa.ForeignKey(Document.id),
-                            primary_key=True)
+    repository_id = sa.Column(GUID(), sa.ForeignKey('repository.id'))
+    document_id = sa.Column(GUID(), sa.ForeignKey(Document.id))
     document = sa.orm.relationship(Document,
                                    backref=backref('document_repository'))
     repository = sa.orm.relationship('Repository')

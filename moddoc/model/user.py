@@ -118,8 +118,8 @@ class UserToRole(app.db.Model, SoftDeleteModel):
     Stores connection between roles and users
     """
 
-    user_id = sa.Column(GUID(), sa.ForeignKey(User.id), primary_key=True)
-    role_id = sa.Column(GUID(), sa.ForeignKey(Role.id), primary_key=True)
+    user_id = sa.Column(GUID(), sa.ForeignKey(User.id))
+    role_id = sa.Column(GUID(), sa.ForeignKey(Role.id))
     user = sa.orm.relationship(User, backref=backref("user_role"))
     role = sa.orm.relationship(Role)
 

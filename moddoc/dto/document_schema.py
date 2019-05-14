@@ -21,5 +21,6 @@ class DocumentSchema(Schema):
 
 
 class LinkSchema(Schema):
+    id = fields.UUID()
     repository_id = fields.UUID(required=True)
     document_id = fields.UUID(required=True)

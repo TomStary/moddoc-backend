@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 0873dc47d4d6
+Revision ID: 1cfa5699c29d
 Revises: 
-Create Date: 2019-05-10 19:12:35.157322
+Create Date: 2019-05-14 22:41:20.466029
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ from moddoc.utils import GUID
 
 
 # revision identifiers, used by Alembic.
-revision = '0873dc47d4d6'
+revision = '1cfa5699c29d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -78,23 +78,23 @@ def upgrade():
     sa.Column('created', sa.DateTime(), nullable=False),
     sa.Column('updated', sa.DateTime(), nullable=True),
     sa.Column('deleted', sa.DateTime(), nullable=True),
-    sa.Column('user_id', GUID(), nullable=False),
-    sa.Column('role_id', GUID(), nullable=False),
+    sa.Column('user_id', GUID(), nullable=True),
+    sa.Column('role_id', GUID(), nullable=True),
     sa.Column('id', GUID(), nullable=False),
     sa.ForeignKeyConstraint(['role_id'], ['role.id'], name=op.f('fk_user_to_role_role_id_role')),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_user_to_role_user_id_user')),
-    sa.PrimaryKeyConstraint('user_id', 'role_id', 'id', name=op.f('pk_user_to_role'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_user_to_role'))
     )
     op.create_table('linked_repositories',
     sa.Column('created', sa.DateTime(), nullable=False),
     sa.Column('updated', sa.DateTime(), nullable=True),
     sa.Column('deleted', sa.DateTime(), nullable=True),
-    sa.Column('repository_id', GUID(), nullable=False),
-    sa.Column('document_id', GUID(), nullable=False),
+    sa.Column('repository_id', GUID(), nullable=True),
+    sa.Column('document_id', GUID(), nullable=True),
     sa.Column('id', GUID(), nullable=False),
     sa.ForeignKeyConstraint(['document_id'], ['document.id'], name=op.f('fk_linked_repositories_document_id_document')),
     sa.ForeignKeyConstraint(['repository_id'], ['repository.id'], name=op.f('fk_linked_repositories_repository_id_repository')),
-    sa.PrimaryKeyConstraint('repository_id', 'document_id', 'id', name=op.f('pk_linked_repositories'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_linked_repositories'))
     )
     op.create_table('module',
     sa.Column('created', sa.DateTime(), nullable=False),
@@ -111,14 +111,14 @@ def upgrade():
     sa.Column('created', sa.DateTime(), nullable=False),
     sa.Column('updated', sa.DateTime(), nullable=True),
     sa.Column('deleted', sa.DateTime(), nullable=True),
-    sa.Column('repository_id', GUID(), nullable=False),
-    sa.Column('user_id', GUID(), nullable=False),
+    sa.Column('repository_id', GUID(), nullable=True),
+    sa.Column('user_id', GUID(), nullable=True),
     sa.Column('read', sa.Boolean(), nullable=False),
     sa.Column('write', sa.Boolean(), nullable=False),
     sa.Column('id', GUID(), nullable=False),
     sa.ForeignKeyConstraint(['repository_id'], ['repository.id'], name=op.f('fk_repository_permission_repository_id_repository')),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_repository_permission_user_id_user')),
-    sa.PrimaryKeyConstraint('repository_id', 'user_id', 'id', name=op.f('pk_repository_permission'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_repository_permission'))
     )
     op.create_table('revision',
     sa.Column('created', sa.DateTime(), nullable=False),

@@ -53,9 +53,8 @@ class Repository(app.db.Model, SoftDeleteModel):
 
 
 class RepositoryPermission(app.db.Model, SoftDeleteModel):
-    repository_id = sa.Column(GUID(), sa.ForeignKey('repository.id'),
-                              primary_key=True)
-    user_id = sa.Column(GUID(), sa.ForeignKey('user.id'), primary_key=True)
+    repository_id = sa.Column(GUID(), sa.ForeignKey('repository.id'))
+    user_id = sa.Column(GUID(), sa.ForeignKey('user.id'))
     read = sa.Column(sa.Boolean, nullable=False, default=False)
     write = sa.Column(sa.Boolean, nullable=False, default=False)
 
