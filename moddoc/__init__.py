@@ -42,13 +42,14 @@ class Moddoc(Flask):
         return app
 
     def init_api(self):
-        from moddoc.api import auth, user, repository, role, module, document
+        from moddoc.api import auth, user, repository, role, module, document, permission  # noqa 501
         self.register_blueprint(auth)
         self.register_blueprint(user)
         self.register_blueprint(module)
         self.register_blueprint(document)
         self.register_blueprint(repository)
         self.register_blueprint(role)
+        self.register_blueprint(permission)
 
     def seeds(self):
         from moddoc.seed import seed_roles, seed_users

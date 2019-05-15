@@ -1,4 +1,6 @@
+from flask_jwt_extended import get_jwt_identity
 import sqlalchemy as sa
+from sqlalchemy import or_, and_
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import backref
 import uuid
@@ -9,14 +11,21 @@ from moddoc.utils import SoftDeleteModel, GUID, ApiException, SoftDeleteQuery
 
 
 class DocumentQueryClass(SoftDeleteQuery):
-    def get_by_id(self, document_id):
-        return self.filter_by(id=document_id, deleted=None).one_or_none()
+    def get_by_id(self, document_id, user):
+        return self.filter(and_(Document.id == document_id,
+                               Document.deleted.is_(None),
+                               or_(Document.owner_id == user['id'],
+                                   Document.permissions.any(id=user['id'], deleted=None)))).one_or_none()  # noqa 501
 
     def get_by_name(self, name):
         return self.filter_by(name=name, deleted=None).one_or_none()
 
     def get_by_owner(self, user):
         return self.filter_by(owner_id=user['id'], deleted=None).all()
+
+    def get_by_user(self, user):
+        return self.filter(Document.deleted.is_(None), or_(Document.owner_id == user['id'],
+                                                           Document.permissions.any(id=user['id'], deleted=None))).all()  # noqa 501
 
 
 class Document(app.db.Model, SoftDeleteModel):
@@ -26,6 +35,7 @@ class Document(app.db.Model, SoftDeleteModel):
     owner_id = sa.Column(GUID, sa.ForeignKey('user.id'))
     owner = sa.orm.relationship('User', backref='documents')
     repositories = association_proxy('document_repository', 'repository')
+    permissions = association_proxy('document_permission', 'user')
 
     def __init__(self, document_model):
         if 'id' not in document_model or document_model['id'] is None:
@@ -38,11 +48,15 @@ class Document(app.db.Model, SoftDeleteModel):
 
     def add_repository(self, repository_id):
         from moddoc.model import Repository
-        repository = Repository.query.get_by_id(repository_id)
+        repository = Repository.query.soft_get(repository_id)
         if repository is None:
             raise ApiException(400, "Repository with this id does not exists.")
         self.repositories.append(repository)
         return self
+
+    def grant_permission(self, user, write):
+        permission = DocumentPermission(self, user, write)
+        app.db.session.add(permission)
 
     @staticmethod
     def create(document_model):
@@ -59,8 +73,8 @@ class Document(app.db.Model, SoftDeleteModel):
                                'Document with this name already exists.')
 
     @staticmethod
-    def update(document_model):
-        document = Document.query.get_by_id(document_model['id'])
+    def update(document_model, user):
+        document = Document.query.get_by_id(document_model['id'], user)
         if document is None:
             raise ApiException(400, "No document with this ID exists.")
         check_name = Document.query.get_by_name(document_model['name'])
@@ -81,6 +95,24 @@ class Document(app.db.Model, SoftDeleteModel):
                     app.create_file(version.id, version.body)
         app.create_file(self.name.replace(' ', '_'), self.body)
         return app.generate_file(self.name.replace(' ', '_'))
+
+
+class DocumentPermission(app.db.Model, SoftDeleteModel):
+    document_id = sa.Column(GUID(), sa.ForeignKey('document.id'))
+    user_id = sa.Column(GUID(), sa.ForeignKey('user.id'))
+    write = sa.Column(sa.Boolean(), nullable=False, default=False)
+    document = sa.orm.relationship(Document,
+                                   backref=backref('document_permission'))
+    user = sa.orm.relationship('User')
+
+    def __init__(self,
+                 document,
+                 user,
+                 write):
+        self.id = uuid.uuid4()
+        self.document = document
+        self.user = user
+        self.write = write
 
 
 class LinkedRepositories(app.db.Model, SoftDeleteModel):

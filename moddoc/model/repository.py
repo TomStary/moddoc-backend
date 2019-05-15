@@ -2,6 +2,7 @@ from sqlalchemy.orm import backref
 from sqlalchemy.ext.associationproxy import association_proxy
 from datetime import datetime
 import sqlalchemy as sa
+from sqlalchemy import or_, and_
 import uuid
 
 from moddoc import app
@@ -12,8 +13,15 @@ class RepositoryQueryClass(SoftDeleteQuery):
     def get_by_owner(self, user):
         return self.filter_by(owner_id=user['id'], deleted=None).all()
 
-    def get_by_id(self, repository_id):
-        return self.filter_by(id=repository_id, deleted=None).one_or_none()
+    def get_by_user(self, user):
+        return self.filter(or_(Repository.owner_id == user['id'],
+                               Repository.permissions.any(id=user['id'],deleted=None))).all()  # noqa 501
+
+    def get_by_id(self, repository_id, user):
+        return self.filter(and_(Repository.id == repository_id,
+                                Repository.deleted.is_(None),
+                                or_(Repository.owner_id == user['id'],
+                                    Repository.permissions.any(id=user['id'], deleted=None)))).one_or_none()  # noqa 501
 
 
 class Repository(app.db.Model, SoftDeleteModel):
@@ -21,7 +29,7 @@ class Repository(app.db.Model, SoftDeleteModel):
     name = sa.Column(sa.String(64), unique=True, nullable=False)
     owner_id = sa.Column(GUID, sa.ForeignKey('user.id'))
     owner = sa.orm.relationship('User', backref='repositories')
-    permissions = association_proxy('repository_permission', 'user')
+    permissions = association_proxy('permission', 'user')
 
     def __init__(self, repository_id=None, name=None, owner_id=None):
         if repository_id is None:
@@ -30,6 +38,10 @@ class Repository(app.db.Model, SoftDeleteModel):
             self.id = repository_id
         self.name = name
         self.owner_id = owner_id
+
+    def grant_permission(self, user, write):
+        permission = RepositoryPermission(self, user, write)
+        app.db.session.add(permission)
 
     @staticmethod
     def create(repository_model):
@@ -55,21 +67,18 @@ class Repository(app.db.Model, SoftDeleteModel):
 class RepositoryPermission(app.db.Model, SoftDeleteModel):
     repository_id = sa.Column(GUID(), sa.ForeignKey('repository.id'))
     user_id = sa.Column(GUID(), sa.ForeignKey('user.id'))
-    read = sa.Column(sa.Boolean, nullable=False, default=False)
     write = sa.Column(sa.Boolean, nullable=False, default=False)
 
     repository = sa.orm.relationship(Repository,
-                                     backref=backref('repository_permission'))
+                                     backref=backref('permission'))
     user = sa.orm.relationship('User')
 
     def __init__(self,
                  repository=None,
                  user=None,
-                 read=None,
                  write=None):
         self.repository = repository
         self.user = user
-        self.read = read
         self.write = write
 
 
@@ -125,8 +134,8 @@ class Module(app.db.Model, SoftDeleteModel):
                                'Module with this name is already present in this repository')  # noqa 501
 
     @staticmethod
-    def update(module_data):
-        module = Module.query.get_by_id(module_data['id'])
+    def update(module_data, user):
+        module = Module.query.get_by_id(module_data['id'], user)
         if module is None:
             raise ApiException(400, 'Module with id does not exists.')
         check_name = Module.query.get_by_name(module_data['name'],

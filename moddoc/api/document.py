@@ -18,15 +18,17 @@ def get_all():
     Return all documents which User can access.
     """
     user = get_jwt_identity()
-    result = Document.query.get_by_owner(user)
+    result = Document.query.get_by_user(user)
     data = __documentSchema.dump(result, many=True).data
     return jsonify(data)
 
 
 @document.route('/<document_id>', methods=['GET'])
+@jwt_required
 def get_by_id(document_id):
     """Return document by its id."""
-    reuslt = Document.query.get_by_id(document_id)
+    user = get_jwt_identity()
+    reuslt = Document.query.get_by_id(document_id, user)
     data = __documentSchema.dump(reuslt).data
     return jsonify(data)
 
@@ -48,7 +50,7 @@ def post_document():
         app.db.session.add(document)
         app.db.session.add(revision)
     else:
-        document, revision = Document.update(data)
+        document, revision = Document.update(data, user)
         app.db.session.add(revision)
     app.db.session.commit()
     data = __documentSchema.dump(document).data
@@ -60,11 +62,11 @@ def post_document():
 def delete_document(document_id):
     """Delete document, document can be deleted only by its owner"""
     user = get_jwt_identity()
-    document = Document.query.get_by_id(document_id)
+    document = Document.query.get_by_id(document_id, user)
     if document is None:
         raise ApiException(400, 'Document with this id does not exists.')
     elif str(document.owner_id) != user['id']:
-        raise ApiException(400, "You do not have permission for this action.")
+        raise ApiException(400, 'You do not have permission for this action.')
     else:
         document.delete()
     app.db.session.commit()
@@ -87,13 +89,14 @@ def get_links(document_id):
 def create_link():
     """Create link between repository and document. This is used to
     declare which repositories are used in document."""
+    user = get_jwt_identity()
     data = request.get_json()
     if data is None:
         raise ApiException(422, "No data.")
     data, error = __linkSchema.load(data)
     if error:
         return jsonify({'error': error}), 422
-    document = Document.query.get_by_id(data['document_id'])
+    document = Document.query.get_by_id(data['document_id'], user)
     if document is None:
         raise ApiException(400, 'Document with this id does not exists.')
     else:
@@ -122,7 +125,8 @@ def build_document(document_id):
     """
     Creates document for given document id.
     """
-    document = Document.query.get_by_id(document_id)
+    user = get_jwt_identity()
+    document = Document.query.get_by_id(document_id, user)
     if document is None:
         raise ApiException(400, 'Document with this id does not exists.')
     generated = document.build()

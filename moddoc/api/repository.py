@@ -15,7 +15,7 @@ __repositorySchema = RepositorySchema()
 def get_all():
     """Return all repositories"""
     user = get_jwt_identity()
-    result = Repository.query.get_by_owner(user)
+    result = Repository.query.get_by_user(user)
     data = __repositorySchema.dump(result, many=True).data
     return jsonify(data)
 
@@ -24,7 +24,8 @@ def get_all():
 @jwt_required
 def get_repository(repository_id):
     """Return repository"""
-    result = Repository.query.get_by_id(repository_id)
+    user = get_jwt_identity()
+    result = Repository.query.get_by_id(repository_id, user)
     data = __repositorySchema.dump(result).data
     return jsonify(data)
 
@@ -45,7 +46,7 @@ def create_or_update_repository():
         repository = Repository.create(data)
         app.db.session.add(repository)
     else:
-        repository = Repository.query.get_by_id(data['id'])
+        repository = Repository.query.get_by_id(data['id'], user)
         repository.update(data)
     app.db.session.commit()
     data = __repositorySchema.dump(repository).data
@@ -57,7 +58,7 @@ def create_or_update_repository():
 def delete_repository(repository_id):
     """Delete repository, only if user is owner of this repository"""
     user = get_jwt_identity()
-    repository = Repository.query.get_by_id(repository_id, None)
+    repository = Repository.query.get_by_id(repository_id, user)
     if repository is None:
         raise ApiException(400, "No module with this id was found.")
     if str(repository.owner_id) != user['id']:
