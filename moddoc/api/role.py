@@ -17,6 +17,9 @@ __roleSchema = RoleSchema()
 @jwt_required
 @check_roles_access(1)
 def get_all():
+    """
+    Get all roles, only available for admins
+    """
     roles = Role.query.get_all()
     result = __roleSchema.dump(roles, many=True).data
     return jsonify(result)
@@ -26,6 +29,10 @@ def get_all():
 @jwt_required
 @check_roles_access(1)
 def get_role(role_id):
+    """
+    Get single role by id
+    :param role_id:
+    """
     role = Role.query.get_by_id(role_id)
     if role is None:
         raise ApiException(400, 'No role with this ID was found.')
@@ -37,6 +44,9 @@ def get_role(role_id):
 @jwt_required
 @check_roles_access(1)
 def post_role():
+    """
+    Create or update role
+    """
     data = request.get_json()
     if data is None:
         raise ApiException(422, 'No data.')
@@ -57,6 +67,10 @@ def post_role():
 @jwt_required
 @check_roles_access(1)
 def delete_role(role_id):
+    """
+    Delete role
+    :param role_id:
+    """
     role = Role.query.get_by_id(role_id)
     if role is None:
         raise ApiException(400,

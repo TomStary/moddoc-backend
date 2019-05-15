@@ -13,6 +13,7 @@ __repositorySchema = RepositorySchema()
 @repository.route('', methods=['GET'])
 @jwt_required
 def get_all():
+    """Return all repositories"""
     user = get_jwt_identity()
     result = Repository.query.get_by_owner(user)
     data = __repositorySchema.dump(result, many=True).data
@@ -22,6 +23,7 @@ def get_all():
 @repository.route('/<repository_id>', methods=['GET'])
 @jwt_required
 def get_repository(repository_id):
+    """Return repository"""
     result = Repository.query.get_by_id(repository_id)
     data = __repositorySchema.dump(result).data
     return jsonify(data)
@@ -30,6 +32,7 @@ def get_repository(repository_id):
 @repository.route('', methods=['POST'])
 @jwt_required
 def create_or_update_repository():
+    """Create or update repository"""
     user = get_jwt_identity()
     data = request.get_json()
     if data is None:
@@ -47,3 +50,18 @@ def create_or_update_repository():
     app.db.session.commit()
     data = __repositorySchema.dump(repository).data
     return jsonify(data)
+
+
+@repository.route('/<repository_id>', methods=['DELETE'])
+@jwt_required
+def delete_repository(repository_id):
+    """Delete repository, only if user is owner of this repository"""
+    user = get_jwt_identity()
+    repository = Repository.query.get_by_id(repository_id, None)
+    if repository is None:
+        raise ApiException(400, "No module with this id was found.")
+    if str(repository.owner_id) != user['id']:
+        raise ApiException(400, "Not enough permissions for this action.")
+    repository.delete()
+    app.db.session.commit()
+    return jsonify()

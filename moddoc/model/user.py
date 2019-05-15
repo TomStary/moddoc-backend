@@ -39,6 +39,14 @@ class User(app.db.Model, SoftDeleteModel):
             raise ApiException(400, "Role with this name does not exists.")
         self.roles.append(role)
 
+    def add_role_by_id(self, role_id):
+        if role_id is None:
+            raise ApiException(400, "No role ID.")
+        role = Role.query.get_by_id(role_id)
+        if role is None:
+            raise ApiException(400, "Role with this ID does not exists.")
+        self.roles.append(role)
+
     def update(self, userModel):
         if self.username != userModel['username']:
             user = User.query.filter(User.username == userModel['username'])\
@@ -61,7 +69,7 @@ class RoleQueryClass(SoftDeleteQuery):
         return self.filter_by(deleted=None).all()
 
     def get_by_id(self, id):
-        return self.filter_by(id=id).one_or_none()
+        return self.filter_by(id=id, deleted=None).one_or_none()
 
     def get_by_name(self, name):
         return self.filter_by(

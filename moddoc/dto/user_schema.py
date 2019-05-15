@@ -16,3 +16,8 @@ class UserSchema(Schema):
     access_token = fields.Str(dump_only=True)
     refresh_token = fields.Str(dump_only=True)
     roles = fields.Nested(RoleSchema, many=True, dump_only=True)
+
+
+class RoleAssignSchema(Schema):
+    users = fields.List(fields.UUID())
+    roles = fields.List(fields.UUID())
