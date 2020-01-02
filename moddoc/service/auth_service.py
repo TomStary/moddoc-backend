@@ -11,11 +11,17 @@ from moddoc.model import TokenBlacklist
 
 @app.jwt.user_claims_loader
 def add_claims(user):
+    """
+    Load claims into JWT
+    """
     return {'roles': user['roles']}
 
 
 @app.jwt.user_identity_loader
 def load_user(user):
+    """
+    Function for loading user
+    """
     return user
 
 
